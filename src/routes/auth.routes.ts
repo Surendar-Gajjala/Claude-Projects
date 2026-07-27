@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { AuthController } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/authenticate.middleware";
 import { authorize } from "../middleware/authorize.middleware";
@@ -10,6 +11,7 @@ import { Role } from "../entities/user.entity";
 
 const router = Router();
 const authController = new AuthController();
+const idParamSchema = z.object({ params: z.object({ id: z.string().uuid() }) });
 
 /**
  * @openapi
@@ -36,6 +38,23 @@ router.post(
   authorize(Role.ADMIN),
   validate(registerSchema),
   authController.register
+);
+
+/**
+ * @openapi
+ * /api/auth/{id}:
+ *   delete:
+ *     summary: Delete a user account (admin only)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(Role.ADMIN),
+  validate(idParamSchema),
+  authController.remove
 );
 
 export default router;

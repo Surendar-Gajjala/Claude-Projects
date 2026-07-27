@@ -98,4 +98,30 @@ describe("AuthService", () => {
       expect(result.user.role).toBe(Role.ADMIN);
     });
   });
+
+  describe("deleteUser", () => {
+    it("throws a not found AppError when the user does not exist", async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(authService.deleteUser("missing-id")).rejects.toMatchObject({
+        statusCode: 404
+      } satisfies Partial<AppError>);
+      expect(userRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it("deletes the user when found", async () => {
+      userRepository.findById.mockResolvedValue({
+        id: "u1",
+        email: "user@example.com",
+        password: "hash",
+        role: Role.EMPLOYEE,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await authService.deleteUser("u1");
+
+      expect(userRepository.delete).toHaveBeenCalledWith("u1");
+    });
+  });
 });

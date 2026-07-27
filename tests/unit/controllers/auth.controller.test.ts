@@ -63,4 +63,27 @@ describe("AuthController", () => {
       expect.objectContaining({ success: true, data: expect.objectContaining({ email: "new@example.com" }) })
     );
   });
+
+  it("remove responds with 200 after deleting the user", async () => {
+    const req = createMockRequest({ params: { id: "u1" } });
+    const res = createMockResponse();
+    authService.deleteUser.mockResolvedValue(undefined);
+
+    await controller.remove(req, res, next);
+
+    expect(authService.deleteUser).toHaveBeenCalledWith("u1");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true, data: null }));
+  });
+
+  it("remove forwards errors to next()", async () => {
+    const req = createMockRequest({ params: { id: "missing" } });
+    const res = createMockResponse();
+    const error = AppError.notFound("User not found");
+    authService.deleteUser.mockRejectedValue(error);
+
+    await controller.remove(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+  });
 });

@@ -67,4 +67,12 @@ describe("UserRepository", () => {
     expect(prismaMock.user.upsert).toHaveBeenCalled();
     expect(result).toEqual(fakeUser);
   });
+
+  it("delete delegates to prisma.user.delete", async () => {
+    prismaMock.user.delete.mockResolvedValue(fakeUser);
+
+    await repository.delete("user-1");
+
+    expect(prismaMock.user.delete).toHaveBeenCalledWith({ where: { id: "user-1" } });
+  });
 });

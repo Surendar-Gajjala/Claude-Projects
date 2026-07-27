@@ -50,4 +50,13 @@ export class AuthService {
 
     return { user: toSafeUser(user), token };
   }
+
+  async deleteUser(id: string): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw AppError.notFound("User not found");
+    }
+
+    await this.userRepository.delete(id);
+  }
 }

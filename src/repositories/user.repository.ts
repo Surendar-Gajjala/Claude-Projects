@@ -24,4 +24,8 @@ export class UserRepository {
       create: data
     });
   }
+
+  async delete(id: string): Promise<void> {
+    await this.db.user.delete({ where: { id } });
+  }
 }
