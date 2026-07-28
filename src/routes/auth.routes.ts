@@ -7,6 +7,7 @@ import { authRateLimiter } from "../middleware/rate-limit.middleware";
 import { validate } from "../middleware/validate.middleware";
 import { registerSchema } from "../dtos/auth/register.dto";
 import { loginSchema } from "../dtos/auth/login.dto";
+import { updateUserSchema } from "../dtos/auth/update-user.dto";
 import { Role } from "../entities/user.entity";
 
 const router = Router();
@@ -38,6 +39,23 @@ router.post(
   authorize(Role.ADMIN),
   validate(registerSchema),
   authController.register
+);
+
+/**
+ * @openapi
+ * /api/auth/{id}:
+ *   put:
+ *     summary: Update a user account (admin only)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put(
+  "/:id",
+  authenticate,
+  authorize(Role.ADMIN),
+  validate(updateUserSchema),
+  authController.update
 );
 
 /**

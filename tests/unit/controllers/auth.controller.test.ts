@@ -64,6 +64,37 @@ describe("AuthController", () => {
     );
   });
 
+  it("update responds with 200 and the updated user on success", async () => {
+    const req = createMockRequest({ params: { id: "u1" }, body: { role: Role.ADMIN } });
+    const res = createMockResponse();
+    authService.updateUser.mockResolvedValue({
+      id: "u1",
+      email: "a@example.com",
+      role: Role.ADMIN,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await controller.update(req, res, next);
+
+    expect(authService.updateUser).toHaveBeenCalledWith("u1", { role: Role.ADMIN });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ success: true, data: expect.objectContaining({ role: Role.ADMIN }) })
+    );
+  });
+
+  it("update forwards errors to next()", async () => {
+    const req = createMockRequest({ params: { id: "missing" }, body: { email: "a@example.com" } });
+    const res = createMockResponse();
+    const error = AppError.notFound("User not found");
+    authService.updateUser.mockRejectedValue(error);
+
+    await controller.update(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
   it("remove responds with 200 after deleting the user", async () => {
     const req = createMockRequest({ params: { id: "u1" } });
     const res = createMockResponse();

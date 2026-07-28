@@ -99,6 +99,92 @@ describe("AuthService", () => {
     });
   });
 
+  describe("updateUser", () => {
+    it("throws a not found AppError when the user does not exist", async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        authService.updateUser("missing-id", { email: "new@example.com" })
+      ).rejects.toMatchObject({ statusCode: 404 } satisfies Partial<AppError>);
+      expect(userRepository.update).not.toHaveBeenCalled();
+    });
+
+    it("throws a conflict AppError when the new email is already taken by another user", async () => {
+      userRepository.findById.mockResolvedValue({
+        id: "u1",
+        email: "user@example.com",
+        password: "hash",
+        role: Role.EMPLOYEE,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      userRepository.findByEmail.mockResolvedValue({
+        id: "u2",
+        email: "taken@example.com",
+        password: "hash",
+        role: Role.EMPLOYEE,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await expect(
+        authService.updateUser("u1", { email: "taken@example.com" })
+      ).rejects.toMatchObject({ statusCode: 409 } satisfies Partial<AppError>);
+      expect(userRepository.update).not.toHaveBeenCalled();
+    });
+
+    it("hashes the password when updating it and returns a user without it", async () => {
+      userRepository.findById.mockResolvedValue({
+        id: "u1",
+        email: "user@example.com",
+        password: "old-hash",
+        role: Role.EMPLOYEE,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      userRepository.update.mockResolvedValue({
+        id: "u1",
+        email: "user@example.com",
+        password: "new-hashed-value",
+        role: Role.EMPLOYEE,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      const result = await authService.updateUser("u1", { password: "NewPassword1!" });
+
+      expect(userRepository.update).toHaveBeenCalledWith(
+        "u1",
+        expect.objectContaining({ password: expect.not.stringMatching("NewPassword1!") })
+      );
+      expect(result).not.toHaveProperty("password");
+    });
+
+    it("updates the role without touching the email or password when only the role changes", async () => {
+      userRepository.findById.mockResolvedValue({
+        id: "u1",
+        email: "user@example.com",
+        password: "hash",
+        role: Role.EMPLOYEE,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      userRepository.update.mockResolvedValue({
+        id: "u1",
+        email: "user@example.com",
+        password: "hash",
+        role: Role.ADMIN,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await authService.updateUser("u1", { role: Role.ADMIN });
+
+      expect(userRepository.findByEmail).not.toHaveBeenCalled();
+      expect(userRepository.update).toHaveBeenCalledWith("u1", { role: Role.ADMIN, password: undefined });
+    });
+  });
+
   describe("deleteUser", () => {
     it("throws a not found AppError when the user does not exist", async () => {
       userRepository.findById.mockResolvedValue(null);

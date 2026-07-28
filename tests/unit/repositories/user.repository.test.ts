@@ -68,6 +68,18 @@ describe("UserRepository", () => {
     expect(result).toEqual(fakeUser);
   });
 
+  it("update delegates to prisma.user.update", async () => {
+    prismaMock.user.update.mockResolvedValue(fakeUser);
+
+    const result = await repository.update("user-1", { email: "updated@example.com" });
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: { email: "updated@example.com" }
+    });
+    expect(result).toEqual(fakeUser);
+  });
+
   it("delete delegates to prisma.user.delete", async () => {
     prismaMock.user.delete.mockResolvedValue(fakeUser);
 

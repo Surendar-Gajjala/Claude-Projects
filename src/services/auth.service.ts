@@ -2,6 +2,7 @@ import { UserRepository } from "../repositories/user.repository";
 import { SafeUser } from "../entities/user.entity";
 import { RegisterDto } from "../dtos/auth/register.dto";
 import { LoginDto } from "../dtos/auth/login.dto";
+import { UpdateUserDto } from "../dtos/auth/update-user.dto";
 import { AppError } from "../utils/app-error";
 import { hashPassword, comparePassword } from "../utils/password.util";
 import { signAccessToken } from "../utils/jwt.util";
@@ -49,6 +50,27 @@ export class AuthService {
     const token = signAccessToken({ sub: user.id, email: user.email, role: user.role });
 
     return { user: toSafeUser(user), token };
+  }
+
+  async updateUser(id: string, dto: UpdateUserDto): Promise<SafeUser> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw AppError.notFound("User not found");
+    }
+
+    if (dto.email && dto.email !== user.email) {
+      const existing = await this.userRepository.findByEmail(dto.email);
+      if (existing) {
+        throw AppError.conflict("A user with this email already exists");
+      }
+    }
+
+    const updated = await this.userRepository.update(id, {
+      ...dto,
+      password: dto.password ? await hashPassword(dto.password) : undefined
+    });
+
+    return toSafeUser(updated);
   }
 
   async deleteUser(id: string): Promise<void> {

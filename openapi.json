@@ -208,6 +208,30 @@
           }
         ]
       }
+    },
+    "/api/auth/{id}": {
+      "put": {
+        "summary": "Update a user account (admin only)",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete a user account (admin only)",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "tags": []

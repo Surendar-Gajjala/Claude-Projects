@@ -25,6 +25,10 @@ export class UserRepository {
     });
   }
 
+  async update(id: string, data: Partial<{ email: string; password: string; role: User["role"] }>): Promise<User> {
+    return this.db.user.update({ where: { id }, data });
+  }
+
   async delete(id: string): Promise<void> {
     await this.db.user.delete({ where: { id } });
   }

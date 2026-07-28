@@ -16,6 +16,11 @@ export class AuthController {
     res.status(200).json(successResponse("Login successful", result));
   });
 
+  update = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const user = await this.authService.updateUser(req.params.id, req.body);
+    res.status(200).json(successResponse("User updated successfully", user));
+  });
+
   remove = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await this.authService.deleteUser(req.params.id);
     res.status(200).json(successResponse("User deleted successfully", null));
